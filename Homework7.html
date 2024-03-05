@@ -1653,25 +1653,147 @@ variable.</p>
 <li><p>(6 points) How many pairs of predictors are highly correlated?
 Consider “highly” correlated to be a sample correlation above 0.7. What
 is the largest correlation between any pair of predictors in the data
-set?</p></li>
+set?</p>
+<pre class="r"><code>data &lt;- longley
+preds &lt;- dplyr::select(data, -Employed)
+round(cor(preds), 3)</code></pre>
+<pre><code>##              GNP.deflator   GNP Unemployed Armed.Forces Population  Year
+## GNP.deflator        1.000 0.992      0.621        0.465      0.979 0.991
+## GNP                 0.992 1.000      0.604        0.446      0.991 0.995
+## Unemployed          0.621 0.604      1.000       -0.177      0.687 0.668
+## Armed.Forces        0.465 0.446     -0.177        1.000      0.364 0.417
+## Population          0.979 0.991      0.687        0.364      1.000 0.994
+## Year                0.991 0.995      0.668        0.417      0.994 1.000</code></pre>
+<p><strong>Answer:</strong> Highly correlated pairs of predictors
+(predictors with a sample correlation above 0.7) are <u>GNP and
+GNP.deflator</u>, <u>Population and GNP.deflator</u>, <u>Year and
+GNP.deflator</u>, <u>Population and GNP</u>, <u>Year and GNP</u>, and
+<u>Year and Population</u>. The largest correlation between any pair of
+predictors in the dataset is the correlation between Year and GNP with a
+correlation of .995.</p></li>
 <li><p>(6 points) Fit a model with <code>Employed</code> as the response
 and the remaining variables as predictors. Give the condition number.
-Does multicollinearity appear to be a problem?</p></li>
+Does multicollinearity appear to be a problem</p>
+<pre class="r"><code>library(olsrr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;olsrr&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:datasets&#39;:
+## 
+##     rivers</code></pre>
+<pre class="r"><code>model &lt;- lm(Employed ~., data=data)
+summary(model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Employed ~ ., data = data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.41011 -0.15767 -0.02816  0.10155  0.45539 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  -3.482e+03  8.904e+02  -3.911 0.003560 ** 
+## GNP.deflator  1.506e-02  8.492e-02   0.177 0.863141    
+## GNP          -3.582e-02  3.349e-02  -1.070 0.312681    
+## Unemployed   -2.020e-02  4.884e-03  -4.136 0.002535 ** 
+## Armed.Forces -1.033e-02  2.143e-03  -4.822 0.000944 ***
+## Population   -5.110e-02  2.261e-01  -0.226 0.826212    
+## Year          1.829e+00  4.555e-01   4.016 0.003037 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.3049 on 9 degrees of freedom
+## Multiple R-squared:  0.9955, Adjusted R-squared:  0.9925 
+## F-statistic: 330.3 on 6 and 9 DF,  p-value: 4.984e-10</code></pre>
+<pre class="r"><code>round(ols_eigen_cindex(model)[, 1:2], 4)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Eigenvalue"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Condition Index"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"6.8614","2":"1.0000"},{"1":"0.0821","2":"9.1417"},{"1":"0.0457","2":"12.2557"},{"1":"0.0107","2":"25.3366"},{"1":"0.0001","2":"230.4239"},{"1":"0.0000","2":"1048.0803"},{"1":"0.0000","2":"43275.0435"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Answer:</strong> The condition number is 43275.04. This is
+much greater than 30, so we say that multicollinearity appears to be a
+problem.</p></li>
 <li><p>(6 points) Calculate and report the variance inflation factor
 (VIF) for each of the predictors. Which variable has the largest VIF? Do
-any of the VIFs suggest multicollinearity?</p></li>
+any of the VIFs suggest multicollinearity?</p>
+<pre class="r"><code>library(faraway)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;faraway&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:olsrr&#39;:
+## 
+##     hsb</code></pre>
+<pre class="r"><code>vif(model)</code></pre>
+<pre><code>## GNP.deflator          GNP   Unemployed Armed.Forces   Population         Year 
+##    135.53244   1788.51348     33.61889      3.58893    399.15102    758.98060</code></pre>
+<p><strong>Answer:</strong> The VIFs for each predictor are as follows:
+GNP.deflator = 135.5, GNP = 1788.5, Unemployed = 33.6, Armed.Forces =
+3.6, Population = 399.2, Year = 759. The variable with the largest VIF
+is GNP with a VIF of 1788.5. A VIF greater than 5 suggests colinearity,
+so all predictor’s except for Armed.Force’s VIF values suggest
+multicollinearity.</p></li>
 <li><p>(6 points) What proportion of the observed variation in
 <code>Population</code> is explained by the linear relationship with the
 other predictors? Are there any variables that are nearly orthogonal to
 the others? Consider a low <span class="math inline">\(R^2_k\)</span> to
-be less than 0.3.</p></li>
+be less than 0.3.</p>
+<pre class="r"><code>summary(lm(Population~GNP.deflator+GNP+Unemployed+Armed.Forces+Year, data=data))</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Population ~ GNP.deflator + GNP + Unemployed + Armed.Forces + 
+##     Year, data = data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.57524 -0.18536  0.07539  0.24615  0.58666 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)   1.618e+03  1.136e+03   1.424 0.184790    
+## GNP.deflator -2.476e-01  8.932e-02  -2.772 0.019720 *  
+## GNP           1.234e-01  2.591e-02   4.765 0.000763 ***
+## Unemployed    1.638e-02  4.454e-03   3.678 0.004261 ** 
+## Armed.Forces  1.791e-03  2.943e-03   0.608 0.556517    
+## Year         -7.820e-01  5.872e-01  -1.332 0.212452    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.4264 on 10 degrees of freedom
+## Multiple R-squared:  0.9975, Adjusted R-squared:  0.9962 
+## F-statistic: 796.3 on 5 and 10 DF,  p-value: 1.154e-12</code></pre>
+<pre class="r"><code>1-1/vif(model)</code></pre>
+<pre><code>## GNP.deflator          GNP   Unemployed Armed.Forces   Population         Year 
+##    0.9926217    0.9994409    0.9702548    0.7213654    0.9974947    0.9986824</code></pre>
+<p><strong>Answer:</strong> The proportion of the observed variation in
+Population that is explained by the linear relationship with the other
+predictors is 99.75%. There are no variables that are nearly orthogonal
+to the others.</p></li>
 <li><p>(6 points) Give the condition indices. How many near
-linear-dependencies are likely causing most of the problem?</p></li>
+linear-dependencies are likely causing most of the problem?</p>
+<pre class="r"><code>library(olsrr)
+round(ols_eigen_cindex(model), 3)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Eigenvalue"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Condition Index"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["intercept"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["GNP.deflator"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["GNP"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Unemployed"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Armed.Forces"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Population"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["Year"],"name":[9],"type":["dbl"],"align":["right"]}],"data":[{"1":"6.861","2":"1.000","3":"0","4":"0.000","5":"0.000","6":"0.000","7":"0.000","8":"0.000","9":"0"},{"1":"0.082","2":"9.142","3":"0","4":"0.000","5":"0.000","6":"0.014","7":"0.092","8":"0.000","9":"0"},{"1":"0.046","2":"12.256","3":"0","4":"0.000","5":"0.000","6":"0.001","7":"0.064","8":"0.000","9":"0"},{"1":"0.011","2":"25.337","3":"0","4":"0.000","5":"0.001","6":"0.065","7":"0.427","8":"0.000","9":"0"},{"1":"0.000","2":"230.424","3":"0","4":"0.457","5":"0.016","6":"0.006","7":"0.115","8":"0.010","9":"0"},{"1":"0.000","2":"1048.080","3":"0","4":"0.505","5":"0.328","6":"0.225","7":"0.000","8":"0.831","9":"0"},{"1":"0.000","2":"43275.043","3":"1","4":"0.038","5":"0.655","6":"0.689","7":"0.302","8":"0.160","9":"1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Answer:</strong> There are 3 indexes in which the condition
+index is greater than 30. Therefore we can conclude that there are three
+linear-dependencies that are likely causing most of the
+problem.</p></li>
 <li><p>(10 points) Fit a new model with <code>Employed</code> as the the
 response and the predictors from the model in part 2 that were
 significant (use <span class="math inline">\(\alpha = 0.05\)</span>).
 Calculate and report the variance inflation factor for each of the
-predictors. Do any of the VIFs suggest multicollinearity?</p></li>
+predictors. Do any of the VIFs suggest multicollinearity?</p>
+<pre class="r"><code>new_model &lt;- lm(Employed ~ Unemployed + Armed.Forces + Year, data=data)
+vif(new_model)</code></pre>
+<pre><code>##   Unemployed Armed.Forces         Year 
+##     3.317929     2.223317     3.890861</code></pre>
+<p><strong>Answer:</strong> We choose Unemplyed, Armed.Forces, and Year
+as our predictors because they all had a p-value of less than 0.05 in
+the linear model from part 2. All VIFs are less than 5, so we conclude
+that collinearity is not a problem for this model.</p></li>
 <li><p>(10 points) Use an <span class="math inline">\(F\)</span>-test to
 compare the models in parts 2 and 6. Report the following:</p>
 <ul>
@@ -1681,7 +1803,21 @@ compare the models in parts 2 and 6. Report the following:</p>
 <li>A statistical decision at <span class="math inline">\(\alpha =
 0.05\)</span>.</li>
 <li>Which model do you prefer, the model from part 2 or 6.</li>
-</ul></li>
+</ul>
+<pre class="r"><code>anova(new_model, model)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Res.Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["RSS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Df"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of Sq"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"12","2":"1.3233607","3":"NA","4":"NA","5":"NA","6":"NA","_rn_":"1"},{"1":"9","2":"0.8364241","3":"3","4":"0.4869367","5":"1.746495","6":"0.2270322","_rn_":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Answer:</strong> The null hypothesis is that the full model
+does not provide a significantly better fit to the data than the
+restricted model. The test-statistic for this test is 1.7465, and the
+p-value is 0.227. Since the p-value is not less than our significance
+level of 0.05, we do not reject the null hypothesis and thus conclude
+that the full model does not provide a significantly better fit to the
+data than the restricted model. Therefore, we would prefer the model
+from part 6 over the model from part 2.</p></li>
 </ol>
 </div>
 <div id="exercise-2-the-sat-data-set-revisited-50-points" class="section level2">
@@ -1696,25 +1832,92 @@ function of <code>expend</code>, <code>salary</code>, and
 <li><p>(8 points) Among the three predictors <code>expend</code>,
 <code>salary</code>, and `ratio``, how many pairs of predictors are are
 highly correlated? Consider “highly” correlated to be a sample
-correlation above 0.7.</p></li>
+correlation above 0.7.</p>
+<pre class="r"><code>library(faraway)
+data &lt;- dplyr::select(sat, total, expend, salary, ratio)
+preds &lt;- dplyr::select(data, -total)
+round(cor(preds), 3)</code></pre>
+<pre><code>##        expend salary  ratio
+## expend  1.000  0.870 -0.371
+## salary  0.870  1.000 -0.001
+## ratio  -0.371 -0.001  1.000</code></pre>
+<p><strong>Answer:</strong> Using 0.7 as highly correlated, we see that
+the only pair of predictors which are highly correlated are salary and
+expend with a correlation score of 0.870.</p></li>
 <li><p>(8 points) Fit a model with <code>total</code> as the response
 and <code>expend</code>, <code>salary</code>, and <code>ratio</code> as
 the predictors. Give the condition number. Does multicollinearity appear
-to be a problem?</p></li>
+to be a problem?</p>
+<pre class="r"><code>model &lt;- lm(total ~ ., data=data)
+round(ols_eigen_cindex(model)[,1:2],4)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Eigenvalue"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Condition Index"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3.9393","2":"1.0000"},{"1":"0.0516","2":"8.7394"},{"1":"0.0074","2":"23.1080"},{"1":"0.0017","2":"48.1229"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Answer:</strong> The condition number is 48.1229. Since the
+condition number is greater than 30, we should be concerned about
+collinearity.</p></li>
 <li><p>(8 points) Calculate and report the variance inflation factor
 (VIF) for each of the predictors. Which variable has the largest VIF? Do
-any of the VIFs suggest multicollinearity?</p></li>
+any of the VIFs suggest multicollinearity?</p>
+<pre class="r"><code>vif(model)</code></pre>
+<pre><code>##   expend   salary    ratio 
+## 9.387552 8.095274 2.285359</code></pre>
+<p><strong>Answer:</strong> The VIF values are as follows: expend =
+9.39, salary = 8.10, ratio = 2.29. The variable with the largest VIF is
+expend. Expend and Salary both have VIF values greater than 5 which
+suggests collinearity.</p></li>
 <li><p>(10 points) Fit a new model with <code>total</code> as the
 response and <code>ratio</code> and the sum of <code>expend</code> and
 <code>salary</code> – that is <code>I(expend + salary)</code> – as the
 predictors. Note that <code>expend</code> and <code>salary</code> have
 the same units (thousands of dollars), so adding them makes sense.
 Calculate and report the variance inflation factor for each of the two
-predictors. Do any of the VIFs suggest multicollinearity?</p></li>
+predictors. Do any of the VIFs suggest multicollinearity?</p>
+<pre class="r"><code>new_model &lt;- lm(total ~ ratio + I(expend + salary), data=data)
+vif(new_model)</code></pre>
+<pre><code>##              ratio I(expend + salary) 
+##           1.005151           1.005151</code></pre>
+<p><strong>Answer:</strong> After adding expend and salary together,
+both of the sum of these predictors and ratio have a VIF value of
+1.005151. Since this value is less than 5 we can say that non of the
+VIFs suggest multicollinearity.</p></li>
 <li><p>(6 points) Conduct a <span class="math inline">\(t\)</span>-test
 at the 5% significance level for each slope parameter for the model in
 part 4. Give the test statistic, <span class="math inline">\(p\)</span>-value, and statistical decision for
-each test.</p></li>
+each test.</p>
+<pre class="r"><code>summary(new_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = total ~ ratio + I(expend + salary), data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -146.82  -43.88    5.57   39.93  126.55 
+## 
+## Coefficients:
+##                    Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        1122.749     95.620  11.742  1.4e-15 ***
+## ratio                 1.657      4.335   0.382  0.70399    
+## I(expend + salary)   -4.536      1.372  -3.305  0.00182 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 68.59 on 47 degrees of freedom
+## Multiple R-squared:  0.194,  Adjusted R-squared:  0.1597 
+## F-statistic: 5.655 on 2 and 47 DF,  p-value: 0.006302</code></pre>
+<p><strong>Answer:</strong> For the slope parameter corresponding to
+ratio, the test statistic is 0.382, the p-value is 0.704, and a
+statistical decision at the 5% significance level is to not reject the
+null hypothesis and say that there is no significant linear relationship
+between ratio and total with the other predictor present in the model.
+For the slope parameter corresponding to the sum of expend and salary,
+the test statistic is -3.305, the p-value is 0.00182, and a statistical
+decision at the 5% significance level is to reject the null hypothesis
+and say that there is a significant linear relationship between the sum
+of expend and salary and the response, total, with the other predictor
+present in the model.</p></li>
 <li><p>(10 points) Use an <span class="math inline">\(F\)</span>-test to
 compare the models in parts 2 and 4. Report the following:</p>
 <ul>
@@ -1725,7 +1928,24 @@ constraint, see the slides on MLR, page 39).</li>
 <li>A statistical decision at <span class="math inline">\(\alpha =
 0.05\)</span>.</li>
 <li>Which model do you prefer, the model from part 2 or part 4.</li>
-</ul></li>
+</ul>
+<pre class="r"><code>anova(new_model, model)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Res.Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["RSS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Df"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of Sq"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"47","2":"221105.6","3":"NA","4":"NA","5":"NA","6":"NA","_rn_":"1"},{"1":"46","2":"216811.9","3":"1","4":"4293.699","5":"0.9109746","6":"0.344845","_rn_":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Answer:</strong> The null hypothesis of this F-test is that
+there is no sufficient improvement in the linear model to predict
+“total” when the predictors expend and salary are combined into one
+predictor. The test statistic is 0.911 and the p-value is 0.3448. A
+statistical decision at <span class="math inline">\(\alpha=0.05\)</span>
+is to reject the null hypothesis at a p-value of less than 0.05. Since
+our p-value is greater than 0.05, we do not reject the null and thus
+conclude that there is no sufficient improvement in the linear model to
+predict “total” when the predictors expend and salary are combined into
+one predictor. Therefore, we would prefer the model from part
+2.</p></li>
 </ol>
 </div>
 
